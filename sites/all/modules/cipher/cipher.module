@@ -54,7 +54,7 @@ function cipher_form_submit($form, &$form_state) {
 	$shift_value = $form_state['values']['input_value'];
 	$shift_direction = $form_state['values']['input_direction'];
 	$shift_word = $form_state['values']['input_phrase'];
-	
+
 	$word_array = str_split($shift_word);
 	$word_array_int = array();
 	if($shift_direction == 'left') {
@@ -65,13 +65,13 @@ function cipher_form_submit($form, &$form_state) {
 				array_push($word_array_int, chr($element));
 			}
 			elseif ($element - $shift_value < 0) {
-				$element = $shift_value - $element;
+				$element =  $element - $shift_value;
 				$element = 26 + $element;
 				$element = 97 + $element;
 				array_push($word_array_int, chr($element));
 			}
 			elseif ($element >= 0 && $element <= 26) {
-				$element = $shift_value - $element;
+				$element =  $element - $shift_value;
 				$element = 97 + $element;
 				array_push($word_array_int, chr($element));
 			}
@@ -80,18 +80,18 @@ function cipher_form_submit($form, &$form_state) {
 
 	elseif ($shift_direction == 'right') {
 		foreach ($word_array as $element) {
-			$element = ord($element) - 97;
+			$element = ord($element) - 97; //25
 			if ($element < 0 || $element > 26) {
 				$element = 97 + $element;
 				array_push($word_array_int, chr($element));
 			}
-			elseif ($element + $shift_value > 26) {
+			elseif ($element + $shift_value >= 26) {
 				$element = $shift_value + $element;
-				$element = 26 % $element;
+				$element = $element % 26;
 				$element = 97 + $element;
 				array_push($word_array_int, chr($element));
 			}
-			elseif ($element >= 0 && $element <= 26) {
+			elseif ($element >= 0 && $element < 26) {
 				$element = $shift_value + $element;
 				$element = 97 + $element;
 				array_push($word_array_int, chr($element));
@@ -119,4 +119,3 @@ function element_validate_special($element) {
 		form_error($element, t('Only letters, spaces, and punctuation are allowed'));
 	}
 }
-
