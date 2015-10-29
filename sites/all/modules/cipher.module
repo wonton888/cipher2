@@ -1,0 +1,122 @@
+<?php
+
+function cipher_menu() {
+	$items = array();
+	$items['cipher'] = array(
+		'title' => 'Shift Cipher',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('cipher_form'),
+		'access callback' => TRUE,
+		'type' => MENU_NORMAL_ITEM,
+	);
+
+	$items['results'] = array(
+		'title' => 'Success',
+		'page callback' => 'show_results',
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+	);
+	return $items;
+}
+
+function cipher_form() {
+	$form['input_value'] = array(
+		'#title' => 'Shift Value',
+		'#type' => 'textfield',
+		'#description' => t('Enter the number of places to shift the letter over'),
+		'#element_validate' => array('element_validate_integer_positive'),
+		'#required' => TRUE,
+	);
+
+	$form['input_direction'] = array(
+		'#title' => 'Shift Direction',
+		'#type' => 'textfield',
+		'#description' => t('Enter a direction to shift the letters'),
+		'#element_validate' => array('element_validate_direction'),
+		"#required" => TRUE,
+	);
+	$form['input_phrase'] = array(
+		'#title' => 'Shift Word',
+		'#type' => 'textfield',
+		'#description' => t('Enter the phrase you would like to encrypt'),
+		'#element_validate' => array('element_validate_special'),
+		'#required' => TRUE,
+	);
+
+	$form['submit'] = array(
+		'#type' => 'submit',
+		'#value' => 'Go',
+	);
+	return $form;
+}
+
+function cipher_form_submit($form, &$form_state) {
+	$shift_value = $form_state['values']['input_value'];
+	$shift_direction = $form_state['values']['input_direction'];
+	$shift_word = $form_state['values']['input_phrase'];
+	
+	$word_array = str_split($shift_word);
+	$word_array_int = array();
+	if($shift_direction == 'left') {
+		foreach ($word_array as $element) {
+			$element = ord($element) - 97;
+			if($element < 0 || $element > 26) {
+				$element = 97 + $element;
+				array_push($word_array_int, chr($element));
+			}
+			elseif ($element - $shift_value < 0) {
+				$element = $shift_value - $element;
+				$element = 26 + $element;
+				$element = 97 + $element;
+				array_push($word_array_int, chr($element));
+			}
+			elseif ($element >= 0 && $element <= 26) {
+				$element = $shift_value - $element;
+				$element = 97 + $element;
+				array_push($word_array_int, chr($element));
+			}
+		}
+	}
+
+	elseif ($shift_direction == 'right') {
+		foreach ($word_array as $element) {
+			$element = ord($element) - 97;
+			if ($element < 0 || $element > 26) {
+				$element = 97 + $element;
+				array_push($word_array_int, chr($element));
+			}
+			elseif ($element + $shift_value > 26) {
+				$element = $shift_value + $element;
+				$element = 26 % $element;
+				$element = 97 + $element;
+				array_push($word_array_int, chr($element));
+			}
+			elseif ($element >= 0 && $element <= 26) {
+				$element = $shift_value + $element;
+				$element = 97 + $element;
+				array_push($word_array_int, chr($element));
+			}
+		}
+	}
+	$shifted_word = implode('', $word_array_int);
+	$_SESSION['shifted_word'] = $shifted_word;
+	$form_state['redirect'] = 'results';
+}
+
+function show_results() {
+	$output = $_SESSION['shifted_word'];
+	return $output;
+}
+
+function element_validate_direction($element) {
+	if ($element['#value'] !== 'left' and $element['#value'] !== 'right') {
+		form_error($element, t('direction must be left or right!'));
+	}
+}
+
+function element_validate_special($element) {
+	if (preg_match('/[^a-zA-Z ,.!?;:-]/', $element['#value'])) {
+		form_error($element, t('Only letters, spaces, and punctuation are allowed'));
+	}
+}
+
